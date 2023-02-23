@@ -1,109 +1,101 @@
-import MaterialTable from "material-table";
-import React, { useState } from "react";
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import Modal from '@mui/material/Modal';
-import Dropdown from 'react-bootstrap/Dropdown';
+import React, {useMemo} from "react";
+import clsx from "clsx";
+import {useTable, useFlexLayout, useResizeColumns, useSortBy} from "react-table";
+import Cell from "./Cell";
+import Header from "./Header";
+import PlusIcon from "./img/Plus";
 
-const style = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 400,
-  bgcolor: 'background.paper',
-  border: '2px solid #000',
-  boxShadow: 24,
-  p: 4,
+const defaultColumn = {
+  minWidth: 50,
+  width: 150,
+  maxWidth: 400,
+  Cell: Cell,
+  Header: Header,
+  sortType: "alphanumericFalsyLast"
 };
 
-export const Table = () => {
+export default function Table({columns, data, dispatch: dataDispatch, skipReset}) {
+  const sortTypes = useMemo(
+    () => ({
+      alphanumericFalsyLast(rowA, rowB, columnId, desc) {
+        if (!rowA.values[columnId] && !rowB.values[columnId]) {
+          return 0;
+        }
 
-  const [open, setOpen] = React.useState(false);
-  const [column,setColumn] = useState("")
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
-  const [tableData, setTableData] = useState([
-    { Name: "Harsh", Email: "Harsh@gmail.com", City: "Indore", PhoneNumber: "9876543215" },
-    { Name: "Chanchal", Email: "Chanchal@gmail.com", Age: "19", City: "Indore", PhoneNumber: "9856743215" },
-    { Name: "Piyush", Email: "Piyush@gmail.com", Age: "18", City: "Indore", PhoneNumber: "9876543215" },
-    { Name: "KUshal", Email: "KUshal@gmail.com", Age: "21", City: "Indore", PhoneNumber: "9876543215" },
-    { Name: "Anshul", Email: "Anshul@gmail.com", Age: "23", City: "Indore", PhoneNumber: "9876543215" },
-    { Name: "Arpit", Email: "Arpit@gmail.com", Age: "16", City: "Indore", PhoneNumber: "9876543215" },
-    { Name: "Idris", Email: "Idris@gmail.com", Age: "17", City: "Indore", PhoneNumber: "9876543215" }
-  ])
-  const [columns, setcolumns] = useState([
-    { title: "Name", field: "Name",filtering: false ,
-    editCell: (props) => ({
-      onCellEditApproved: (newValue, oldValue, rowData, columnDef) => {
-        const dataUpdate = [...tableData];
-        const index = rowData.tableData.id;
-        dataUpdate[index][columnDef.field] = newValue;
-        setTableData([...dataUpdate]);
-      },
-      onCellEditCancelled: (rowData, columnDef) => {},
+        if (!rowA.values[columnId]) {
+          return desc ? -1 : 1;
+        }
+
+        if (!rowB.values[columnId]) {
+          return desc ? 1 : -1;
+        }
+
+        return isNaN(rowA.values[columnId])
+          ? rowA.values[columnId].localeCompare(rowB.values[columnId])
+          : rowA.values[columnId] - rowB.values[columnId];
+      }
     }),
+    []
+  );
 
-  },
-    { title: "Email", field: "Email", filtering: false,editable: true  },
-    { title: "Age", field: "Age", emptyValue: () => <em>null</em>, filtering: false },
-    { title: "City", field: "City", filtering: false },
-    { title: "PhoneNumber", field: "PhoneNumber", filtering: false },
-  ])
+  const {getTableProps, getTableBodyProps, headerGroups, rows, prepareRow} = useTable(
+    {
+      columns,
+      data,
+      defaultColumn,
+      dataDispatch,
+      autoResetSortBy: !skipReset,
+      autoResetFilters: !skipReset,
+      autoResetRowState: !skipReset,
+      sortTypes
+    },
+    useFlexLayout,
+    useResizeColumns,
+    useSortBy
+  );
 
+  function isTableResizing() {
+    for (let headerGroup of headerGroups) {
+      for (let column of headerGroup.headers) {
+        if (column.isResizing) {
+          return true;
+        }
+      }
+    }
 
-  const Submitt = async(e)=>{
-    console.log("col")
-    e.preventDefault();
-    console.log(column)
-    var addcol = columns
-    addcol = [...addcol,{ title: column, field: column, filtering: false },]
-    console.log(addcol);
-    setcolumns(addcol)
+    return false;
   }
+
   return (
     <>
-      <div>
-        <Button onClick={handleOpen}>Add Column</Button>
-        <Modal
-          open={open}
-          onClose={handleClose}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
-        >
-          <Box sx={style}>
-            <input type="text" value={column} onChange={(e) => setColumn(e.target.value)}/>
-            <button onClick={Submitt}>Submit</button>
-          </Box>
-        </Modal>
-        <MaterialTable title="dbDash"
-          columns={columns}
-          data={tableData}
-          editingMode="modal" //default
-          enableEditing
-          editable={{
-            onRowAdd: (newRow) => new Promise((resolve, reject) => {
-              setTableData([...tableData, newRow])
-              setTimeout(() => resolve(), 500)
-            }),
-            onRowUpdate: (newRow, oldRow) => new Promise((resolve, reject) => {
-              const updateData = [...tableData]
-              updateData[oldRow.tableData.id] = newRow
-              setTableData(updateData)
-              console.log(newRow, oldRow);
-              setTimeout(() => resolve(), 500)
-            }),
-            onRowDelete: (selectedRow) => new Promise((resolve, reject) => {
-              const updateData = [...tableData]
-              updateData.splice(selectedRow.tableData.id, 1)
-              setTableData(updateData);
-              setTimeout(() => resolve(), 500)
-            }),
-          }}
-          options={{ filtering: true, addRowPosition: "first", actionsColumnIndex: -1, selection: true,columnsButton: true,editable: true }}
-        />
-
+      <div {...getTableProps()} className={clsx("table", isTableResizing() && "noselect")}>
+        <div>
+          {headerGroups.map((headerGroup) => (
+            <div {...headerGroup.getHeaderGroupProps()} className='tr'>
+              {headerGroup.headers.map((column) => column.render("Header"))}
+            </div>
+          ))}
+        </div>
+        <div {...getTableBodyProps()}>
+          {rows.map((row, i) => {
+            prepareRow(row);
+            return (
+              <div {...row.getRowProps()} className='tr'>
+                {row.cells.map((cell) => (
+                  <div {...cell.getCellProps()} className='td'>
+                    {cell.render("Cell")}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+          <div className='tr add-row' onClick={() => dataDispatch({type: "add_row"})}>
+            <span className='svg-icon svg-gray' style={{marginRight: 4}}>
+              <PlusIcon />
+            </span>
+            New
+          </div>
+        </div>
       </div>
     </>
   );

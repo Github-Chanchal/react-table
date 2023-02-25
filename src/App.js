@@ -4,6 +4,8 @@ import makeData from "./makeData";
 import Table from "./Table";
 import { randomColor, shortId } from "./utils";
 import { grey } from "./colors";
+import { CheckBox } from "@mui/icons-material";
+import { type } from "@testing-library/user-event/dist/type";
 
 function reducer(state, action) {
   switch (action.type) {
@@ -214,9 +216,10 @@ function reducer(state, action) {
 }
 
 function App() {
-  const [state, dispatch] = useReducer(reducer, makeData(10));
+  const [state, dispatch] = useReducer(reducer, makeData(100));
 
   useEffect(() => {
+    // console.log(dispatch)
     dispatch({ type: "enable_reset" });
   }, [state.data, state.columns]);
 
@@ -234,7 +237,9 @@ function App() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          flexDirection: "column"
+          flexDirection: "column",
+          type:"checkbox"
+
         }}
       >
         <h1 style={{ color: grey(800) }}>Editable React Table</h1>
@@ -264,7 +269,7 @@ function App() {
           alignItems: "center",
           justifyContent: "center",
           flexDirection: "column"
-        }}
+        }}  
       >
         <p style={{ color: grey(600) }}>
           Built by{" "}

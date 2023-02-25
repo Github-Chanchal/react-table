@@ -1,7 +1,7 @@
 import React, { useEffect, useReducer } from "react";
 import "./style.css";
 import makeData from "./makeData";
-import Table from "./Table";
+import Table from "./table";
 import { randomColor, shortId } from "./utils";
 import { grey } from "./colors";
 import { CheckBox } from "@mui/icons-material";

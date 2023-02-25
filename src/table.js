@@ -22,12 +22,12 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
     event.preventDefault();
     document.execCommand('copy');
   };
-  function handlePaste(e, row, col) {
-    e.preventDefault();
-    const text = e.clipboardData.getData('text/plain');
-    const newData = [...data];
-    newData[row][col] = text.trim();
-  }
+  // function handlePaste(e, row, col) {
+  //   e.preventDefault();
+  //   const text = e.clipboardData.getData('text/plain');
+  //   const newData = [...data];
+  //   newData[row][col] = text.trim();
+  // }
   // const handlePaste = (event, cell) => {
   //   event.preventDefault();
   //   const clipboardData = event.clipboardData.getData('text/plain');
@@ -164,9 +164,9 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
               
                 className='tr'>
                 {row.cells.map((cell,colIndex) => (                    
-                    <div {...cell.getCellProps([getCellProps(cell)],{
+                    <div {...cell.getCellProps({
                     onCopy: event => handleCopy(event, cell.value),
-                    onPaste : event => handlePaste(event, rowIndex, colIndex)
+                    // onPaste : event => handlePaste(event, rowIndex, colIndex)  
                   })} 
                   contentEditable
                   className='td'>

@@ -4,6 +4,8 @@ import { useTable, useFlexLayout, useResizeColumns, useRowSelect, useSortBy } fr
 import Cell from "./Cell";
 import Header from "./Header";
 import PlusIcon from "./img/Plus";
+import { useCellRangeSelection } from 'react-table-plugins'
+import useScrollOnEdges from 'react-scroll-on-edges'
 
 const defaultColumn = {
   minWidth: 50,
@@ -15,6 +17,9 @@ const defaultColumn = {
 };
 
 export default function Table({ columns, data, dispatch: dataDispatch, skipReset }) {
+
+  const [selectedRange, setSelectedRange] = useState({});
+
   const [selectedCells, setSelectedCells] = useState([]);
   const [copiedValue, setCopiedValue] = useState('');
   const handleCopy = (event, value) => {
@@ -82,7 +87,12 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
     []
   );
 
-  const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow, selectedFlatRows } = useTable(
+  const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow, selectedFlatRows,
+    state: { selectedCellIds, currentSelectedCellIds, isSelectingCells },
+    getCellsBetweenId,
+    setSelectedCellIds,
+    cellsById
+  } = useTable(
     {
       columns,
       data,
@@ -92,7 +102,12 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
       autoResetFilters: !skipReset,
       autoResetRowState: !skipReset,
       sortTypes,
+      cellIdSplitBy: 'cols_rows',
+      initialState: {
+        selectedCellIds: {}
+      }
     },
+    useCellRangeSelection,
     useFlexLayout,
     useResizeColumns,
     useSortBy,
@@ -115,6 +130,41 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
     }
   );
 
+  let cellsSelected = { ...currentSelectedCellIds, ...selectedCellIds }
+
+  // returns two random cell ids, this is just for the demo.
+  const getRandomCellIds = React.useCallback(() => {
+    let cloneCellIds = Object.keys(cellsById)
+    let randomCellId = () =>
+      cloneCellIds[(cloneCellIds.length * Math.random()) << 0]
+    return [randomCellId(), randomCellId()]
+  }, [cellsById])
+
+  // getCellsBetweenId returns all cell Ids between two cell Id, and then setState for selectedCellIds
+  const selectRandomCells = React.useCallback(() => {
+    const cellsBetween = getCellsBetweenId(...getRandomCellIds())
+    setSelectedCellIds(cellsBetween)
+  }, [getCellsBetweenId, setSelectedCellIds, getRandomCellIds])
+
+  const handleCellMouseDown = (rowIndex, columnIndex) => {
+    setSelectedRange({
+      startRow: rowIndex,
+      endRow: rowIndex,
+      startColumn: columnIndex,
+      endColumn: columnIndex
+    });
+  };
+
+  const handleCellMouseOver = (rowIndex, columnIndex) => {
+    setSelectedRange(prevRange => {
+      return {
+        ...prevRange,
+        endRow: rowIndex,
+        endColumn: columnIndex
+      };
+    });
+  };
+
   const selectedRowIds = useMemo(() => selectedFlatRows.map((row) => row.original.id), [selectedFlatRows]);
   function isTableResizing() {
     for (let headerGroup of headerGroups) {
@@ -127,6 +177,11 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
 
     return false;
   }
+  const getEdgeScrollingProps = useScrollOnEdges({
+    canAnimate: isSelectingCells // Scroll when user `isSelectingCells` is True
+    // scrollSpeed: 15, -> Optional, default is 12,
+    // edgeSize: 30     -> Optional, default is 25
+  })
 
   return (
     <>
@@ -154,22 +209,37 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
               )
             })}
           </div>
-          {/* ))} */}
+
         </div>
         <div {...getTableBodyProps()}>
           {rows.map((row, rowIndex ) => {
             prepareRow(row);
             return (
-              <div {...row.getRowProps()} 
-              
+              <div  key={rowIndex} {...row.getRowProps()} 
+
                 className='tr'>
-                {row.cells.map((cell,colIndex) => (                    
-                    <div {...cell.getCellProps({
+                {row.cells.map((cell,columnIndex) => ( 
+                     
+                    <div key={columnIndex}
+                    onMouseDown={() => handleCellMouseDown(rowIndex, columnIndex)}
+                    onMouseOver={() => handleCellMouseOver(rowIndex, columnIndex)}
+                    {...cell.getCellRangeSelectionProps()}
+                    {...cell.getCellProps(
+                      {
                     onCopy: event => handleCopy(event, cell.value),
                     // onPaste : event => handlePaste(event, rowIndex, colIndex)  
-                  })} 
+                  }
+                  )} 
+  
+                  suppressContentEditableWarning={true}
                   contentEditable
-                  className='td'>
+                  style=
+                  {
+                    cellsSelected[cell.id]
+                      ? { ...cell.getCellProps().style, backgroundColor: '#6beba8', userSelect: 'none' }
+                      : {...cell.getCellProps().style ,  backgroundColor: 'white', userSelect: 'none' }
+                  }
+                  className='td'> 
                     {cell.render("Cell")}
                   </div>
                 ))}
@@ -184,6 +254,11 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
           </div>
         </div>
       </div>
+      <pre>
+        <code>
+        {JSON.stringify({ selectedCellIds, currentSelectedCellIds }, null, 2)}
+        </code>
+      </pre>
     </>
   );
 }

@@ -216,7 +216,7 @@ function reducer(state, action) {
 }
 
 function App() {
-  const [state, dispatch] = useReducer(reducer, makeData(100));
+  const [state, dispatch] = useReducer(reducer, makeData(10));
 
   useEffect(() => {
     // console.log(dispatch)

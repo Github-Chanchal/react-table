@@ -13,6 +13,7 @@ export default function makeData(count) {
       email: faker.internet.email(),
       age: Math.floor(20 + Math.random() * 20),
       music: faker.music.genre()
+      //ischecked represnts row checked or not 
     };
     options.push({label: row.music, backgroundColor: randomColor()});
 
@@ -20,6 +21,9 @@ export default function makeData(count) {
   }
 
   let columns = [
+    // {
+      //  checkbox obj
+    // }
     {
       id: "firstName",
       label: "First Name",

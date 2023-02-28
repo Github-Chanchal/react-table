@@ -1,4 +1,4 @@
-import React, { useMemo,useState } from "react";
+import React, { useMemo,useState, useEffect } from "react";
 import clsx from "clsx";
 import { useTable, useFlexLayout, useResizeColumns, useRowSelect, useSortBy } from "react-table";
 import Cell from "./Cell";
@@ -88,7 +88,8 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
   );
 
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow, selectedFlatRows,
-    state: { selectedCellIds, currentSelectedCellIds, isSelectingCells },
+    state: { selectedCellIds, currentSelectedCellIds, isSelectingCells  },
+     
     getCellsBetweenId,
     setSelectedCellIds,
     cellsById
@@ -102,7 +103,7 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
       autoResetFilters: !skipReset,
       autoResetRowState: !skipReset,
       sortTypes,
-      cellIdSplitBy: 'cols_rows',
+      cellIdSplitBy: '_',
       initialState: {
         selectedCellIds: {}
       }
@@ -121,7 +122,7 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
           width:"76",
           Cell: ({ row }) => (
             <div>
-              <input type="checkbox" {...row.getToggleRowSelectedProps()} />
+              <input type="checkbox" {...row.getToggleRowSelectedProps()}/>
             </div>
           ),
         },
@@ -129,6 +130,26 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
       ]);
     }
   );
+
+  useEffect(() => {
+    if(Object.keys(selectedCellIds).length > 0) {
+      const newData = [...data]
+      // firstName_1
+      // ['firstName' ,1]
+      const newValueToReplace = newData[Object.keys(selectedCellIds)[0].split('_')[1]][Object.keys(selectedCellIds)[0].split('_')[0]];
+      console.log('newValueToReplace', newValueToReplace)
+      Object.keys(selectedCellIds).forEach((key, i) => {
+        // firstName_1
+        const keyName = key.split('_')[0] 
+        const index = key.split('_')[1]
+        if(i === 0) return;
+        
+        newData[index][keyName] = newValueToReplace;
+      })
+
+      console.log('newData', newData)
+    }
+  }, [selectedCellIds])
 
   let cellsSelected = { ...currentSelectedCellIds, ...selectedCellIds }
 
@@ -218,7 +239,12 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
               <div  key={rowIndex} {...row.getRowProps()} 
 
                 className='tr'>
-                {row.cells.map((cell,columnIndex) => ( 
+                {row.cells.map((cell,columnIndex) => {
+                  console.log("cell",cell.getCellProps( {
+                    onCopy: event => handleCopy(event, cell.value),
+                    // onPaste : event => handlePaste(event, rowIndex, colIndex)  
+                  }))
+                  return (
                      
                     <div key={columnIndex}
                     onMouseDown={() => handleCellMouseDown(rowIndex, columnIndex)}
@@ -230,9 +256,9 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
                     // onPaste : event => handlePaste(event, rowIndex, colIndex)  
                   }
                   )} 
-  
+                  
                   suppressContentEditableWarning={true}
-                  contentEditable
+                  contentEditable = {!cell.getCellProps().key?.includes("999999")}
                   style=
                   {
                     cellsSelected[cell.id]
@@ -242,7 +268,7 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
                   className='td'> 
                     {cell.render("Cell")}
                   </div>
-                ))}
+                )})}
               </div>
             );
           })}

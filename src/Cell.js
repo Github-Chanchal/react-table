@@ -18,6 +18,7 @@ export default function Cell({value: initialValue, row: {index}, column: {id, da
   const [addSelectRef, setAddSelectRef] = useState(null);
 
   useEffect(() => {
+
     setValue({value: initialValue, update: false});
   }, [initialValue]);
 
@@ -167,8 +168,12 @@ export default function Cell({value: initialValue, row: {index}, column: {id, da
         </>
       );
       break;
+      // case :
+      // typeckecxbox
+      // state will be there boolean state
+
     default:
-      element = <span></span>;
+      element = null;
       break;
   }
 

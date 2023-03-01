@@ -138,6 +138,7 @@ function reducer(state, action) {
         ]
       };
     case "update_cell":
+ 
       return {
         ...state,
         skipReset: true,

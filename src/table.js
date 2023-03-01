@@ -134,20 +134,17 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
   useEffect(() => {
     if(Object.keys(selectedCellIds).length > 0) {
       const newData = [...data]
-      // firstName_1
-      // ['firstName' ,1]
-      const newValueToReplace = newData[Object.keys(selectedCellIds)[0].split('_')[1]][Object.keys(selectedCellIds)[0].split('_')[0]];
-      console.log('newValueToReplace', newValueToReplace)
+      const firstValue =Object.keys(selectedCellIds)[0].split('_');
+      const newValueToReplace = newData[firstValue[1]][firstValue[0]];
       Object.keys(selectedCellIds).forEach((key, i) => {
-        // firstName_1
         const keyName = key.split('_')[0] 
         const index = key.split('_')[1]
-        if(i === 0) return;
+        if(i === 0 ||firstValue[0] != keyName ) return;
         
+  
         newData[index][keyName] = newValueToReplace;
       })
-
-      console.log('newData', newData)
+      dataDispatch({ type: "update_cell" })
     }
   }, [selectedCellIds])
 
@@ -186,7 +183,13 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
     });
   };
 
-  const selectedRowIds = useMemo(() => selectedFlatRows.map((row) => row.original.id), [selectedFlatRows]);
+  const selectedRowIds = useMemo(() => selectedFlatRows.map((row) =>{
+    
+    return (
+      row
+    )
+  }
+  ), [selectedFlatRows]);
   function isTableResizing() {
     for (let headerGroup of headerGroups) {
       for (let column of headerGroup.headers) {
@@ -219,11 +222,7 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
       </pre>
       <div {...getTableProps()} className={clsx("table", isTableResizing() && "noselect")}>
         <div>
-          {/* {headerGroups.map((headerGroup) => ( */}
-
-
           <div {...headerGroups[0].getHeaderGroupProps()} className='tr'>
-            {/* {console.log("headerGroup",headerGroup)} */}
             {headerGroups[0].headers.map((column) => {
               return (
                 column.render("Header")
@@ -236,14 +235,9 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
           {rows.map((row, rowIndex ) => {
             prepareRow(row);
             return (
-              <div  key={rowIndex} {...row.getRowProps()} 
-
-                className='tr'>
+              <div  key={rowIndex} {...row.getRowProps()} className= {'tr'+rowIndex}>
                 {row.cells.map((cell,columnIndex) => {
-                  console.log("cell",cell.getCellProps( {
-                    onCopy: event => handleCopy(event, cell.value),
-                    // onPaste : event => handlePaste(event, rowIndex, colIndex)  
-                  }))
+                  {console.log("cellsSelected",cellsSelected,cellsSelected[cell.id],cell)}
                   return (
                      
                     <div key={columnIndex}

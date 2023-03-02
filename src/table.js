@@ -1,6 +1,6 @@
 import React, { useMemo,useState, useEffect } from "react";
 import clsx from "clsx";
-import { useTable, useFlexLayout, useResizeColumns, useRowSelect, useSortBy } from "react-table";
+import { useTable, useFlexLayout, useResizeColumns, useRowSelect, useSortBy  } from "react-table";
 import Cell from "./Cell";
 import Header from "./Header";
 import PlusIcon from "./img/Plus";
@@ -22,11 +22,30 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
 
   const [selectedCells, setSelectedCells] = useState([]);
   const [copiedValue, setCopiedValue] = useState('');
-  const handleCopy = (event, value) => {
+
+    const handleCopy = (event, value) => {
     event.clipboardData.setData('text/plain', value);
     event.preventDefault();
     document.execCommand('copy');
   };
+  const handlePaste = (event,row,cell) => {
+    event.preventDefault();
+    console.log("row,col,value",row,cell.column.id)
+    const clipboardData = event.clipboardData.getData('text/plain');
+    console.log("clipboardData",clipboardData);
+    // const copiedValue =  event.clipboardData.setData('text/plain', value);
+    // if (clipboardData !== copiedValue) {
+       // handle paste logic here
+       const text = event.clipboardData.getData('text/plain');
+       const newData = [...data];
+       console.log("newData",newData)
+       newData[row][cell.column.id] = text.trim();
+// }
+    dataDispatch({type:"update_cell"})
+  };
+
+
+
   // function handlePaste(e, row, col) {
   //   e.preventDefault();
   //   const text = e.clipboardData.getData('text/plain');
@@ -108,27 +127,28 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
         selectedCellIds: {}
       }
     },
+ 
     useCellRangeSelection,
     useFlexLayout,
     useResizeColumns,
     useSortBy,
-    useRowSelect,
-    (hooks) => {
-      hooks.visibleColumns.push((columns) => [
-        {
-          id: 'selection',
-          label: "checkbox",
-          Header: () => "Checkbox",
-          width:"76",
-          Cell: ({ row }) => (
-            <div>
-              <input type="checkbox" {...row.getToggleRowSelectedProps()}/>
-            </div>
-          ),
-        },
-        ...columns,
-      ]);
-    }
+    useRowSelect, 
+    // (hooks) => {
+    //   hooks.visibleColumns.push((columns) => [
+    //     {
+    //       id: 'selection',
+    //       label: "checkbox",
+    //       Header: () => "Checkbox",
+    //       width:"76",
+    //       Cell: ({ row }) => (
+    //         <div>
+    //           <input type="checkbox" {...row.getToggleRowSelectedProps()}/>
+    //         </div>
+    //       ),
+    //     },
+    //     ...columns,
+    //   ]);
+    // }
   );
 
   useEffect(() => {
@@ -236,23 +256,23 @@ export default function Table({ columns, data, dispatch: dataDispatch, skipReset
             prepareRow(row);
             return (
               <div  key={rowIndex} {...row.getRowProps()} className= {'tr'+rowIndex}>
-                {row.cells.map((cell,columnIndex) => {
-                  {console.log("cellsSelected",cellsSelected,cellsSelected[cell.id],cell)}
+                {row.cells.map((cell,colIndex) => {
                   return (
                      
-                    <div key={columnIndex}
-                    onMouseDown={() => handleCellMouseDown(rowIndex, columnIndex)}
-                    onMouseOver={() => handleCellMouseOver(rowIndex, columnIndex)}
+                    <div
+                   
                     {...cell.getCellRangeSelectionProps()}
                     {...cell.getCellProps(
                       {
-                    onCopy: event => handleCopy(event, cell.value),
+                        onCopy: event => handleCopy(event, cell.value),
+                        onPaste : event => handlePaste(event, rowIndex, cell)
+                    // onCopy: event => handleCopy(event, cell.value),
                     // onPaste : event => handlePaste(event, rowIndex, colIndex)  
                   }
                   )} 
                   
                   suppressContentEditableWarning={true}
-                  contentEditable = {!cell.getCellProps().key?.includes("999999")}
+                  contentEditable = {!cell.getCellProps().key?.includes("999999") }
                   style=
                   {
                     cellsSelected[cell.id]

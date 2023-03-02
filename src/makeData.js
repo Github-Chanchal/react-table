@@ -21,9 +21,14 @@ export default function makeData(count) {
   }
 
   let columns = [
-    // {
-      //  checkbox obj
-    // }
+    {
+      id: 9999991,
+      width: 100,
+      label: "checkbox",
+      disableResizing: true,
+      dataType: "checkbox",
+      accessor : "checkbox",
+    },
     {
       id: "firstName",
       label: "First Name",

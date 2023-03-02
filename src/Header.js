@@ -160,9 +160,31 @@ export default function Header({
     dataDispatch({type: "update_column_header", columnId: id, label: header});
   }
 
-  return id !== 999999 ? (
+  return id == 999999 || id == 9999991 ? (
     <>
-      <div {...getHeaderProps({style: {display: "inline-block"}})} className='th noselect'>
+    
+      { id ==999999 ?<div {...getHeaderProps({style: {display: "inline-block"}})} className='th noselect'>
+      <div
+        className='th-content'
+        style={{display: "flex", justifyContent: "center"}}
+        onClick={(e) => dataDispatch({type: "add_column_to_left", columnId: 999999, focus: true})}>
+        <span className='svg-icon-sm svg-gray'>
+          <PlusIcon />
+        </span>
+      </div>
+    </div > :
+    <div  {...getHeaderProps({style: {display: "inline-block"}})} className='th noselect'
+        style={{display: "flex", justifyContent: "center"}}>
+          <div
+        className='th-content' style={{paddingLeft: "25px"}}>
+
+          checkbox
+        </div>
+    </div> }
+    </>
+  ) : (
+    <>
+    <div {...getHeaderProps({style: {display: "inline-block"}})} className='th noselect'>
         <div className='th-content' onClick={() => setExpanded(true)} ref={setReferenceElement}>
           <span className='svg-icon svg-gray icon-margin'>{propertyIcon}</span>
           {label}
@@ -244,16 +266,6 @@ export default function Header({
         </div>
       )}
     </>
-  ) : (
-    <div {...getHeaderProps({style: {display: "inline-block"}})} className='th noselect'>
-      <div
-        className='th-content'
-        style={{display: "flex", justifyContent: "center"}}
-        onClick={(e) => dataDispatch({type: "add_column_to_left", columnId: 999999, focus: true})}>
-        <span className='svg-icon-sm svg-gray'>
-          <PlusIcon />
-        </span>
-      </div>
-    </div>
+   
   );
 }

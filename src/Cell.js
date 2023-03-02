@@ -6,7 +6,8 @@ import {grey} from "./colors";
 import PlusIcon from "./img/Plus";
 import {randomColor} from "./utils";
 
-export default function Cell({value: initialValue, row: {index}, column: {id, dataType, options}, dataDispatch}) {
+export default function Cell({value: initialValue, row, column: {id, dataType, options}, dataDispatch}) {
+  console.log("row",row);
   const [value, setValue] = useState({value: initialValue, update: false});
   const [selectRef, setSelectRef] = useState(null);
   const [selectPop, setSelectPop] = useState(null);
@@ -16,6 +17,7 @@ export default function Cell({value: initialValue, row: {index}, column: {id, da
   };
   const [showAdd, setShowAdd] = useState(false);
   const [addSelectRef, setAddSelectRef] = useState(null);
+  // const [isDoubleClick, setIsDoubleClick] = useState(true);
 
   useEffect(() => {
 
@@ -24,9 +26,9 @@ export default function Cell({value: initialValue, row: {index}, column: {id, da
 
   useEffect(() => {
     if (value.update) {
-      dataDispatch({type: "update_cell", columnId: id, rowIndex: index, value: value.value});
+      dataDispatch({type: "update_cell", columnId: id, rowIndex: row.index, value: value.value});
     }
-  }, [value, dataDispatch, id, index]);
+  }, [value, dataDispatch, id, row.index]);
 
   function handleOptionKeyDown(e) {
     if (e.key === "Enter") {
@@ -67,6 +69,13 @@ export default function Cell({value: initialValue, row: {index}, column: {id, da
     let match = options.find((option) => option.label === value.value);
     return (match && match.backgroundColor) || grey(300);
   }
+  // const clickHandler = (event) => {
+	// 	if(event.detail == 2){
+
+  //     setIsDoubleClick(false)
+	// 		console.log("Double Clicked")
+	// 	}
+	// }
 
   useEffect(() => {
     if (addSelectRef && showAdd) {
@@ -79,9 +88,13 @@ export default function Cell({value: initialValue, row: {index}, column: {id, da
     case "text":
       element = (
         <ContentEditable
+          // disabled={isDoubleClick}
+          // onClick={clickHandler}
           html={(value.value && value.value.toString()) || ""}
           onChange={onChange}
+          // onBlur={() => { setIsDoubleClick(true)}}
           onBlur={() => setValue((old) => ({value: old.value, update: true}))}
+
           className='data-input'
         />
       );
@@ -89,6 +102,7 @@ export default function Cell({value: initialValue, row: {index}, column: {id, da
     case "number":
       element = (
         <ContentEditable
+        // disabled ={isDoubleClick}
           html={(value.value && value.value.toString()) || ""}
           onChange={onChange}
           onBlur={() => setValue((old) => ({value: old.value, update: true}))}
@@ -168,10 +182,15 @@ export default function Cell({value: initialValue, row: {index}, column: {id, da
         </>
       );
       break;
-      // case :
-      // typeckecxbox
-      // state will be there boolean state
-
+      
+    case "checkbox":
+      element =(<><div   {...row.getRowProps()} className= "tr">
+          <input type="checkbox" {...row.getToggleRowSelectedProps()} />
+          </div>
+      </>)
+          
+        break;      
+    
     default:
       element = null;
       break;
